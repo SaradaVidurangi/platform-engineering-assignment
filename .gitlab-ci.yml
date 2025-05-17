@@ -16,7 +16,6 @@ stages:
   - deploy
 
 before_script:
-  # Install Java & Maven manually, since we're using docker image
   - apk add --no-cache openjdk17 maven curl python3 py3-pip
   - pip3 install awscli
   - aws --version
@@ -35,10 +34,8 @@ build:
     - docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
 deploy:
-  image: python:3.11-slim
+  image: amazon/aws-cli:2
   stage: deploy
-  before_script:
-    - pip install awscli
   script:
     - echo "Deploying to ECS..."
     - aws ecs update-service \
@@ -46,4 +43,3 @@ deploy:
         --service my-java-app-service \
         --force-new-deployment \
         --region $AWS_REGION
-
