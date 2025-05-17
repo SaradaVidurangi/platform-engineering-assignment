@@ -35,8 +35,10 @@ build:
     - docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
 deploy:
-  image: amazon/aws-cli:2
+  image: python:3.11-slim
   stage: deploy
+  before_script:
+    - pip install --break-system-packages awscli
   script:
     - echo "Deploying to ECS..."
     - aws ecs update-service \
@@ -44,3 +46,4 @@ deploy:
         --service my-java-app-service \
         --force-new-deployment \
         --region $AWS_REGION
+
