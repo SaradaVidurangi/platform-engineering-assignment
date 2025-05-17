@@ -23,8 +23,10 @@ build:
     - docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
 deploy:
-  image: amazon/aws-cli:latest
+  image: python:3.11-alpine
   stage: deploy
+  before_script:
+    - pip install --no-cache-dir awscli
   script:
     - aws ecs update-service \
         --cluster my-java-app-cluster \
