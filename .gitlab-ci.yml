@@ -5,7 +5,7 @@ services:
 
 variables:
   AWS_REGION: "us-east-1"
-  ECR_REGISTRY: "967823535579.dkr.ecr.us-east-1.amazonaws.com/my-java-app"
+  ECR_REGISTRY: "967823535579.dkr.ecr.us-east-1.amazonaws.com"
   ECR_REPOSITORY: "my-java-app"
   IMAGE_TAG: "latest"
 
