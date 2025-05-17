@@ -16,8 +16,10 @@ stages:
   - deploy
 
 before_script:
-  - apk add --no-cache openjdk17 maven curl python3 py3-pip
-  - pip3 install awscli
+  - apk add --no-cache openjdk17 maven curl
+  - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+  - unzip awscliv2.zip
+  - ./aws/install
   - aws --version
   - echo "Logging in to AWS ECR..."
   - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
@@ -30,7 +32,6 @@ build:
     - echo "Building Docker image..."
     - docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
     - docker tag $ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-    - echo "Pushing image to AWS ECR..."
     - docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
 deploy:
