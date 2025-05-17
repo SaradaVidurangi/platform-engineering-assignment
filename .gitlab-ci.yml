@@ -1,4 +1,4 @@
-image: docker:latest
+image: maven:3.9-eclipse-temurin-17
 
 services:
   - docker:dind
@@ -16,18 +16,22 @@ stages:
   - deploy
 
 build:
-  image: maven:3.9-eclipse-temurin-17
   stage: build
+  before_script:
+    - apt-get update && apt-get install -y curl unzip docker.io
+    - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    - unzip awscliv2.zip
+    - ./aws/install
+    - aws --version
+    - echo "Logging in to AWS ECR..."
+    - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
   script:
     - echo "Building JAR..."
     - ./mvnw clean package -DskipTests
     - echo "Building Docker image..."
     - docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
     - docker tag $ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-    - echo "Logging in to AWS ECR..."
-    - aws --version
-    - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
-    - echo "Pushing image to AWS ECR..."
+    - echo "Pushing Docker image to ECR..."
     - docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
 deploy:
