@@ -14,10 +14,10 @@ Platform Engineering, on the other hand, focuses on building internal platforms 
 Rise of DevSecOps
 DevSecOps integrates security into the DevOps pipeline from the very beginning. It automates security checks (e.g., static code analysis, vulnerability scanning) and treats security as a shared responsibility across teams.
 
-# Early vulnerability detection
-# Automated compliance
-# Faster remediation
-# Secure by design
+Early vulnerability detection
+Automated compliance
+Faster remediation
+Secure by design
 
 DevSecOps ensures that development is fast, scalable, and secure, helping organizations meet increasing cybersecurity demands.
 
