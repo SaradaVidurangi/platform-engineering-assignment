@@ -1,4 +1,4 @@
-image: amazon/aws-cli:2.13.26  # ✅ Includes aws-cli pre-installed
+image: docker:latest
 
 services:
   - docker:dind
@@ -6,8 +6,8 @@ services:
 variables:
   DOCKER_HOST: tcp://docker:2375/
   DOCKER_TLS_CERTDIR: ""
-  AWS_REGION: "us-east-1"
-  ECR_REGISTRY: "967823535579.dkr.ecr.us-east-1.amazonaws.com"
+  AWS_REGION: "us-east-1"  # Change if your region is different
+  ECR_REGISTRY: "123456789012.dkr.ecr.us-east-1.amazonaws.com"  # Change this
   ECR_REPOSITORY: "my-java-app"
   IMAGE_TAG: "latest"
 
@@ -16,26 +16,31 @@ stages:
   - deploy
 
 before_script:
-  # ✅ Install Docker CLI since amazon/aws-cli doesn't come with it
-  - apk add --no-cache docker openjdk17 maven
+  - apk add --no-cache openjdk17 maven curl unzip
+  - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+  - unzip -q awscliv2.zip
+  - ./aws/install
+  - export PATH=$PATH:/usr/local/bin
+  - aws --version
+  - echo "Logging in to AWS ECR..."
+  - aws sts get-caller-identity  # This confirms credentials are working
+  - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
 
 build:
   stage: build
   script:
     - echo "Building JAR..."
     - ./mvnw clean package -DskipTests
-    - echo "Logging into AWS ECR..."
-    - aws --version
-    - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
     - echo "Building Docker image..."
     - docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
     - docker tag $ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-    - echo "Pushing image to ECR..."
     - docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
 deploy:
-  image: amazon/aws-cli:2.13.26  # ✅ Again, aws-cli pre-installed
+  image: python:3.11-slim
   stage: deploy
+  before_script:
+    - pip install --no-cache-dir awscli
   script:
     - echo "Deploying to ECS..."
     - aws ecs update-service \
