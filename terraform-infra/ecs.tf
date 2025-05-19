@@ -2,7 +2,7 @@ resource "aws_ecs_cluster" "ecs_cluster" {
   name = "${var.app_name}-cluster"
 }
 
-resource "aws_ecs_task_definition" "app" {
+resource "aws_ecs_task_definition" "app_small" {
   depends_on = [aws_cloudwatch_log_group.ecs_log_group] # 👈 Ensures log group is created first
 
   family                   = "my-java-app"
@@ -56,4 +56,31 @@ resource "aws_ecs_service" "app_service" {
   lifecycle {
     ignore_changes = [task_definition]
   }
+}
+resource "aws_ecs_task_definition" "app_medium" {
+  family                   = "my-java-app"
+  cpu                      = "512" # 0.5 vCPU
+  memory                   = "1024"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+
+  container_definitions = aws_ecs_task_definition.app_small.container_definitions
+}
+
+resource "aws_cloudwatch_metric_alarm" "high_cpu_alarm" {
+  alarm_name          = "high-cpu-ecs"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/ECS"
+  period              = 60
+  statistic           = "Average"
+  threshold           = 70
+  alarm_description   = "Trigger when CPU > 70%"
+  dimensions = {
+    ClusterName = aws_ecs_cluster.ecs_cluster.name
+    ServiceName = aws_ecs_service.app_service.name
+  }
+  alarm_actions = [aws_sns_topic.vertical_scaling_topic.arn]
 }

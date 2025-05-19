@@ -46,6 +46,9 @@ resource "aws_cloudwatch_log_group" "ecs_log_group" {
 
 
 
+resource "aws_sns_topic" "vertical_scaling_topic" {
+  name = "ecs-vertical-scaling-topic"
+}
 
 
 
